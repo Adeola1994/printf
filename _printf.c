@@ -42,7 +42,7 @@ int parse(char *string, va_list args)
 	if (strLen is 0)
 		return (0);
 	index = findchr(string, '%');
-	if (index is - 1)
+	if (index is -1)
 		return (outputLen + print(string, strLen));
 	outputLen += print(string, index);
 	string = trim(string, index + 1);
@@ -55,11 +55,6 @@ int parse(char *string, va_list args)
 	return (outputLen + parse(string, args));
 }
 
-/**
- * _printf - a function that prints form outed output to stdout
- * @format: the string that contains any format specfier
- * Return: returns the number of printed characters
- */
 int _printf(const char *format, ...)
 {
 	va_list args;
