@@ -1,65 +1,77 @@
-#include "main.h"
+#include "headers/parser.h"
+#include "headers/macros.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include "headers/search.h"
 
-void print_buffer(char buffer[], int *buff_ind);
+int expand(char *string, va_list args, int *len)
+{
+	int i, matchWidth;
+	parser parsers[] = {
+		{match_char, print_char},
+		{match_string, print_string},
+		{match_percent, print_percent},
+		{match_int, print_int},
+		{match_uint, print_uint},
+		{match_address, print_address},
+		{match_hexadecimal, print_hexadecimal},
+		{match_octal, print_octal},
+		{match_binary, print_binary},
+		{NULL, NULL}
+	};
+
+	for (i = 0; parsers[i].match isnot NULL; i++)
+	{
+
+		matchWidth = parsers[i].match(string);
+		if (matchWidth isnot 0)
+		{
+			*len = *len + parsers[i].print(string, args);
+			break;
+		}
+	}
+	return (matchWidth);
+}
+
+int parse(char *string, va_list args)
+{
+	int index, outputLen, strLen, match;
+
+	outputLen = 0;
+	strLen = lenstr(string);
+	if (strLen is 0)
+		return (0);
+	index = findchr(string, '%');
+	if (index is - 1)
+		return (outputLen + print(string, strLen));
+	outputLen += print(string, index);
+	string = trim(string, index + 1);
+	match = expand(string, args, &outputLen);
+	if (match is 0)
+		outputLen += _putchar('%');
+	string = trim(string, match);
+	if (string[0] is nullbyte)
+		return (outputLen);
+	return (outputLen + parse(string, args));
+}
 
 /**
- * _printf - a function that prints formouted output to stdout
- * @format: the string that contains any format specifier
+ * _printf - a function that prints form outed output to stdout
+ * @format: the string that contains any format specfier
  * Return: returns the number of printed characters
  */
 int _printf(const char *format, ...)
 {
-	int i, printed = 0, printed_chars = 0;
-	int flags, width, precision, size, buff_ind = 0;
-	va_list list;
-	char buffer[BUFF_SIZE];
+	va_list args;
+	char *string;
+	int outputLen;
 
-	if (format == NULL)
-		return (-1);
-
-	va_start(list, format);
-
-	for (i = 0; format && format[i] != '\0'; i++)
-	{
-		if (format[i] != '%')
-		{
-			buffer[buff_ind++] = format[i];
-			if (buff_ind == BUFF_SIZE)
-				print_buffer(buffer, &buff_ind);
-			printed_chars++;
-		}
-		else
-		{
-			print_buffer(buffer, &buff_ind);
-			flags = get_flags(format, &i);
-			width = get_width(format, &i, list);
-			precision = get_precision(format, &i, list);
-			size = get_size(format, &i);
-			++i;
-			printed = handle_print(format, &i, list, buffer,
-				flags, width, precision, size);
-			if (printed == -1)
-				return (-1);
-			printed_chars += printed;
-		}
-	}
-
-	print_buffer(buffer, &buff_ind);
-
-	va_end(list);
-
-	return (printed_chars);
-}
-
-/**
- * print_buffer - Prints the contents of the buffer if it exist
- * @buffer: Array of chars
- * @buff_ind: Index at which to add next char, represents the length.
- */
-void print_buffer(char buffer[], int *buff_ind)
-{
-	if (*buff_ind > 0)
-		write(1, &buffer[0], *buff_ind);
-
-	*buff_ind = 0;
+	string = makecopy(format);
+	if (string is NULL)
+		exit(98);
+	va_start(args, format);
+	outputLen = parse(string, args);
+	va_end(args);
+	free(string);
+	return (outputLen);
 }
